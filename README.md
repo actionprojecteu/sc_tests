@@ -1,14 +1,20 @@
-# Spectral Colors Test Program 2
+# Spectral Colors Test Program 4
 
-This sketch test the OPT3001 sensor and sends its data through Bluetooth. Since the OPT3001 needs 3.3V, se need to have previosly mounted the AS7262. For this test, we do not need to manage the AS7262 sensor.
+This sketch test the miniTFT Wing Display. 
 
 ## Prerequisites
 
-Connection between the [Arduino Nano](https://store.arduino.cc/arduino-nano) or [Arduino Nano Every](https://store.arduino.cc/nano-every) to the [Adafruit Bluefruit LE SPI Friend - Bluetooth Low Energy (BLE)](https://www.adafruit.com/product/2633) already working.
+* [Arduino Nano](https://store.arduino.cc/arduino-nano) or [Arduino Nano Every](https://store.arduino.cc/nano-every).
+* [Adafruit AS7262 6-Channel Visible Light / Color Sensor Breakout](https://www.adafruit.com/product/3779) already mounted, since the miniTFT Wing needs 3.3V to operate. 
+* [Adafruit Mini Color TFT with Joystick FeatherWing](https://www.adafruit.com/product/3321). Although not documented, it seems that the miniTFT wing has its data lines 5V-tolerant.
 
-It needs the Adafruit's [Bluefruit LE Connect App for iOS and Android](https://learn.adafruit.com/bluefruit-le-connect)
+Since the miniTFT Wings needs 3.3V, we need to have previosly mounted the AS7262. For this test, we do not need to manage the AS7262 sensor nor Bluetooth.
 
-If everyting is working, you should see the OP3001 sensor readings as JSON strings displayed in the mobile application screen.
+If everything is working, you should see messages when pushing the miniTFT buttons.
+
+***Note:*** The built-in LED is attached to pin Arduino Nano D13. 
+However, this pin is used to interface miniTCFWing via SPI
+So, the built-in LED becomes unusable after miniTFTWing initialization
 
 ## Hardware Connections
 
@@ -56,22 +62,12 @@ If everyting is working, you should see the OP3001 sensor readings as JSON strin
 This project has been tested using the following libraries and versions. 
 Use the Arduino Board Manager to install them:
 
-| Library                            | Version | Comment
+| Library                            | Version | Comment                   |
 |:----------------------------------:|:-------:|:--------------------------|
-| Adafruit BluefruitLE nRF51         |  1.9.6  |                           |
-| ClosedCube OPT3001                 |  1.1.2  |                           |
+| Adafruit seesaw Library            |  1.2.0  |                           |
+| Adafruit ST7735 and ST7789 Library |  1.5.6  |                           |
+| Adafruit GFX Library               |  1.7.1  |                           |
 
-### JSON Data format for OPT3001 sensor readings
-
-***Valid for this test sketch only ***
-
-| Index |  Type  | Units | Description                                                 |
-|:-----:|:------:|:-----:|:------------------------------------------------------------|
-| 0     | string |   -   | Sensor Type. "O" = OPT3001.                                 |
-| 1     | int    |   -   | Message sequence number. Useful to detect missing messages. |
-| 2     | int    |   ms  | Relative timestamp since the Arduino boot.                  |
-| 3     | int    |   ms  | Sensor exposure time                     .                  | 
-| 4     | float  |   lux | Light intensity as perceived by the human eye.              |
 
 ## About
 

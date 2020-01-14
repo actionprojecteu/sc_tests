@@ -2,11 +2,24 @@
 
 This sketch test the connection between the [Arduino Nano](https://store.arduino.cc/arduino-nano) or [Arduino Nano Every](https://store.arduino.cc/nano-every) to the [Adafruit Bluefruit LE SPI Friend - Bluetooth Low Energy (BLE)](https://www.adafruit.com/product/2633).
 
-It needs the Adafruit's [Bluefruit LE Connect App for iOS and Android](https://learn.adafruit.com/bluefruit-le-connect)
+## Prerequisites
+
+It also needs the Adafruit's [Bluefruit LE Connect App for iOS and Android](https://learn.adafruit.com/bluefruit-le-connect)
 
 If everyting is working, you should see the typical `"Hello world!"` string displayed in the mobile application screen.
 
 ## Hardware Connections
+
+### Power supply lines
+
+| Power supply line       | Comment                                              |
+|:-----------------------:|:-----------------------------------------------------|
+| 5V Bus                  | Arduino supplies 5V to this bus through its 5V pin   |
+| 3V3 Bus                 | AS7262 provides 3.3V to this bus through its 3v3 pin |                             
+| GND Bus                 | Ground                                               |
+
+
+### Connections
 
 | Arduino Nano/Every Pin |  BLE SPI Friend Module Pin | Comment                      |
 |:----------------------:|:--------------------------:|:-----------------------------|
@@ -16,16 +29,15 @@ If everyting is working, you should see the typical `"Hello world!"` string disp
 | D8         [out]       | CS   [in]                  | SPI bus Chip Select          |
 | D7         [in]        | IRQ  [out]                 | Interrupt Request to Arduino |
 | D4         [out]       | RESET [in]                 | Bluetooth module reset line  |
-| 5V         [out]       | VIN   [in]                 | Arduino 5V voltage           |
-| GND                    | GND                        | Ground                       |
-
+| 5V Bus     [out]       | VIN   [in]                 | Power supply from 5V Bus     |
+| GND Bus                | GND                        | Ground                       |
 
 ## Libraries needed
 
 This project has been tested using the following libraries and versions. 
 Use the Arduino Board Manager to install them:
 
-| Library                            | Version | Comment
+| Library                            | Version | Comment                   |
 |:----------------------------------:|:-------:|:--------------------------|
 | Adafruit BluefruitLE nRF51         |  1.9.6  |                           |
 

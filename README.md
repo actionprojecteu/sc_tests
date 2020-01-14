@@ -1,12 +1,14 @@
-# Spectral Colors Test Program 2
+# Spectral Colors Test Program 3
 
-This sketch test the OPT3001 sensor and sends its data through Bluetooth. Since the OPT3001 needs 3.3V, se need to have previosly mounted the AS7262. For this test, we do not need to manage the AS7262 sensor.
+This sketch test the OPT3001 sensor and sends its data through Bluetooth. 
 
 ## Prerequisites
 
 Connection between the [Arduino Nano](https://store.arduino.cc/arduino-nano) or [Arduino Nano Every](https://store.arduino.cc/nano-every) to the [Adafruit Bluefruit LE SPI Friend - Bluetooth Low Energy (BLE)](https://www.adafruit.com/product/2633) already working.
 
-It needs the Adafruit's [Bluefruit LE Connect App for iOS and Android](https://learn.adafruit.com/bluefruit-le-connect)
+Since the OPT3001 needs 3.3V, se need to have previosly mounted the [Adafruit AS7262 6-Channel Visible Light / Color Sensor Breakout](https://www.adafruit.com/product/3779). For this test, we do not need to manage this sensor.
+
+It also needs the Adafruit's [Bluefruit LE Connect App for iOS and Android](https://learn.adafruit.com/bluefruit-le-connect)
 
 If everyting is working, you should see the OP3001 sensor readings as JSON strings displayed in the mobile application screen.
 
@@ -56,7 +58,7 @@ If everyting is working, you should see the OP3001 sensor readings as JSON strin
 This project has been tested using the following libraries and versions. 
 Use the Arduino Board Manager to install them:
 
-| Library                            | Version | Comment
+| Library                            | Version | Comment                   |
 |:----------------------------------:|:-------:|:--------------------------|
 | Adafruit BluefruitLE nRF51         |  1.9.6  |                           |
 | ClosedCube OPT3001                 |  1.1.2  |                           |

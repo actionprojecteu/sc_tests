@@ -1,10 +1,13 @@
-# Spectral Colors Test Program 1
+# Spectral Colors Test Program 2
 
-This sketch test the connection between the [Arduino Nano](https://store.arduino.cc/arduino-nano) or [Arduino Nano Every](https://store.arduino.cc/nano-every) to the [Adafruit Bluefruit LE SPI Friend - Bluetooth Low Energy (BLE)](https://www.adafruit.com/product/2633).
+This sketch test the AS7262 sensor and sends its data through Bluetooth. 
+
+## Prerequisites
+Connection between the [Arduino Nano](https://store.arduino.cc/arduino-nano) or [Arduino Nano Every](https://store.arduino.cc/nano-every) to the [Adafruit Bluefruit LE SPI Friend - Bluetooth Low Energy (BLE)](https://www.adafruit.com/product/2633) already working.
 
 It needs the Adafruit's [Bluefruit LE Connect App for iOS and Android](https://learn.adafruit.com/bluefruit-le-connect)
 
-If everyting is working, you should see the typical `"Hello world!"` string displayed in the mobile application screen.
+If everyting is working, you should see the sensor readings as JSON strings displayed in the mobile application screen.
 
 ## Hardware Connections
 
@@ -20,6 +23,14 @@ If everyting is working, you should see the typical `"Hello world!"` string disp
 | GND                    | GND                        | Ground                       |
 
 
+| Arduino Nano/Every Pin |  AS7262 Breakout Board Pin | Comment                                                 |
+|:----------------------:|:--------------------------:|:--------------------------------------------------------|
+| A4 (SDA)               | SDA [in/out]               | I2C Data Line. No need for additional pull-up resistor. |
+| A5 (SCL)               | SCL [in]                   | I2C Clock.  No need for additional pull-up resistor.    |
+| 5V         [out]       | VIN   [in]                 | Arduino 5V voltage                                      |
+| GND                    | GND                        | Ground                                                  |
+
+
 ## Libraries needed
 
 This project has been tested using the following libraries and versions. 
@@ -28,6 +39,30 @@ Use the Arduino Board Manager to install them:
 | Library                            | Version | Comment
 |:----------------------------------:|:-------:|:--------------------------|
 | Adafruit BluefruitLE nRF51         |  1.9.6  |                           |
+| Adafruit AS726X                    |  1.0.2  | *See Note 1*              |
+
+
+***Note 1:*** For the Arduino Nano, I have produced a slightly more compact from for this library, so that the entrire program can fit in the Nano Flash memory. For the Nano Every, you can use the standard 
+library.
+
+
+### JSON Data format for AS7262 sensor readings
+
+***Valid for this test sketch only***
+
+| Index |  Type  | Units | Description                                  |
+|:-----:|:------:|:-----:|:---------------------------------------------|
+| 0     | string |   -   | Sensor Type. "A" = AS7262. |
+| 1     | int    |   ms  | Relative timestamp since the Arduino boot. |
+| 2     | float  |   ms  | Sensor exposure time. | 
+| 3     | float  |   -   | Sensor gain. |
+| 4     | int    |  ºC   | AS7262 internal temperature. |
+| 5     | int    | counts/μW/cm2 | Violet (450nm) raw value. |
+| 6     | int    | counts/μW/cm2 | Blue (500nm) raw value. |
+| 7     | int    | counts/μW/cm2 | Green (550nm) raw value. |
+| 8     | int    | counts/μW/cm2 | Yellow (570nm) raw value. |
+| 9     | int    | counts/μW/cm2 | Orange (600nm) raw value. |
+| 10    | int    | counts/μW/cm2 | Red (650nm) raw value. |
 
 ## About
 

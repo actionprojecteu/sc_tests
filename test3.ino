@@ -39,21 +39,21 @@
                    \
 
                    /
-                   |   5  V    <====> 3.3V 
-              Pwr  |   GND     <====> GND
+                   |   5V    <====> VIN
+              Pwr  |   GND   <====> GND
                    \
 
 
-              Arduino Nano        AS7262 Spectral Sensor
-              ============        ======================
+              Arduino Nano        OPT3001 Sensor
+              ============        ===============
 
                     /
                    |  A4 (SDA)  -----> SDA 
               I2C  |  A5 (SCL)  -----> SCL 
                    \
-
+    
                    /
-                   |   5  V    <====> VIN 
+                   |   3.3V    <====> VDD 
               Pwr  |   GND     <====> GND
                    \
 
@@ -67,12 +67,12 @@
 // Support for the Git version tags
 #include "git-version.h"
 
-// Adafruit Spectral Sensor library
-#include <Adafruit_AS726x.h>
-
 // Adafruit Bluetooth libraries
 #include <Adafruit_BLE.h>
 #include <Adafruit_BluefruitLE_SPI.h>
+
+// ClosedCube OPT3001 library
+#include <ClosedCube_OPT3001.h>
 
 /* ************************************************************************** */ 
 /*                                DEFINEs SECTION                             */
@@ -81,6 +81,9 @@
 #ifndef GIT_VERSION
 #define GIT_VERSION "0.1.0" // For downloads without git
 #endif
+
+// OPT 3001 Address (0x45 by default)
+#define OPT3001_ADDRESS 0x45
 
 // BLUETOOTH SHARED SPI SETTINGS
 // -----------------------------------------------------------------------------
@@ -101,18 +104,6 @@
 #define MODE_LED_BEHAVIOUR          "MODE"
 
 
-// Exposure time step in milliseconds
-#define EXPOSURE_UNIT 2.8
-
-// steps in a single button up/down click
-#define EXPOSURE_STEPS 20 
-
-// maximun value expected fro the AS7262 chip
-#define SENSOR_MAX 5000
-
-// Short delay in screens (milliseconds)
-#define SHORT_DELAY 200
-
 // strings to display on TFT and send to BLE
 // It is not worth to place these strings in Flash
 const char* GainTable[] = {
@@ -126,31 +117,25 @@ const char* GainTable[] = {
 /*                        CUSTOM CLASES & DATA TYPES                          */
 /* ************************************************************************** */ 
 
-typedef struct {
-  uint16_t rawValues[AS726x_NUM_CHANNELS];
-  uint8_t  gain;           // device gain multiplier
-  uint8_t  exposure;       // device integration time in steps of 2.8 ms
-  uint8_t  temperature;    // device internal temperature
-} as7262_info_t;
 
 
 /* ************************************************************************** */ 
 /*                          GLOBAL VARIABLES SECTION                          */
 /* ************************************************************************** */ 
 
-
-//create the 6 channel spectral sensor object
-Adafruit_AS726x ams;
-
-// buffer to hold raw & calibrated values as well as exposure time and gain
-as7262_info_t as7262_info;
-
 /* Hardware SPI, using SCK/MOSI/MISO hardware SPI pins and then user selected CS/IRQ/RST */
 Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, 
                             BLUEFRUIT_SPI_IRQ, 
                             BLUEFRUIT_SPI_RST);
 
- unsigned long seq = 0; // Tx sequence number
+// I2C OPT3001 sensor object
+ClosedCube_OPT3001 opt3001;
+
+// OPT3001 read sensor data
+OPT3001 opt3001_info;
+
+// Tx sequence number
+unsigned long seq = 0; 
 
 /* ************************************************************************** */ 
 /*                            HELPER FUNCTIONS                                */
@@ -168,53 +153,42 @@ static void error(const __FlashStringHelper* err)
   while(1) ;
 }
 
-/* ************************************************************************** */ 
-
-
 
 /* ************************************************************************** */ 
 
-static uint8_t read_as7262_sensor()
+static uint8_t read_opt3001_sensor()
 {
-  extern Adafruit_AS726x ams;
-  extern as7262_info_t   as7262_info;
+  extern ClosedCube_OPT3001 opt3001;
+  extern OPT3001 opt3001_info;
 
-  uint8_t dataReady = ams.dataReady();
-  if(dataReady) {
-    ams.readRawValues(as7262_info.rawValues);
-    as7262_info.temperature = ams.readTemperature();
+  OPT3001_Config sensorConfig = opt3001.readConfig();
+  uint8_t dataReady = (sensorConfig.ConversionReady != 0);
+
+  if (dataReady) {
+    opt3001_info = opt3001.readResult();
   }
   return dataReady;
 }
+
 
 /* ************************************************************************** */ 
 
 static void format_message(String& line)
 {
-  extern as7262_info_t as7262_info;
-  extern const char*   GainTable[];
-  extern unsigned long seq;
- 
-   // Start JSON sequence
-  line += String("['A',");
+  extern unsigned long   seq;
+  extern OPT3001 opt3001_info;
+
+  // Start JSON sequence
+  line += String("['O',");
   // Sequence number
   line += String(seq++);  line += String(',');
   // Relative timestamp
   line += String(millis()); line += String(',');
-  // AS7262 Exposure time in milliseconds
-  line += String(as7262_info.exposure*EXPOSURE_UNIT,1); line += String(',');
-  // AS7262 Gain
-  line += String(GainTable[as7262_info.gain]); line += String(',');
-  // AS7262 Temperature
-  line += String(as7262_info.temperature); line += String(',');
-  // AS7262 raw values
-  for (int i=0; i< 5; i++) {
-      line += String(as7262_info.rawValues[i]); 
-      line += String(',');
-  }
-  line += String(as7262_info.rawValues[5]); 
+  // OPT 3001 lux readings
+  line += String(opt3001_info.lux, 2);
   // End JSON sequence
   line += String("]\n"); 
+ 
 }
 
 
@@ -249,27 +223,29 @@ static void setup_ble()
   //ble.verbose(false);  // debug info is a little annoying after this point!
 }
 
+
 /* ************************************************************************** */ 
 
-static void setup_as7262()
+static void setup_opt3001()
 {
-  extern as7262_info_t as7262_info;
-  extern Adafruit_AS726x ams;
- 
-  Serial.print(F("AS7262... "));
-  // finds the 6 channel chip
-  if(!ams.begin()){
-    error(F("could not connect to AS7262!"));
+  extern ClosedCube_OPT3001 opt3001;
+
+  Serial.print(F("OPT3001... "));
+  opt3001.begin(OPT3001_ADDRESS);
+
+  OPT3001_Config config;
+  
+  config.RangeNumber               = B1100;  // Automatic full-scale
+  config.ConvertionTime            = B1;     // 800 ms
+  config.Latch                     = B1;     // ???
+  config.ModeOfConversionOperation = B11;    // Continuou operation
+
+  OPT3001_ErrorCode errorConfig = opt3001.writeConfig(config);
+  if (errorConfig != NO_ERROR) {
+    error(F("OPT3001 config error!"));
   }
-  // as initialized by the AS7262 library
-  // Note that in MODE 2, the exposure time is actually doubled
-  as7262_info.gain     = GAIN_64X;
-  as7262_info.exposure = 50;
-  // continuous conversion time is already done by default in the ams driver
-  //ams.setConversionType(MODE_2);
   Serial.println(F("ok"));
 }
-
 
 /* ************************************************************************** */ 
 /*                                MAIN SECTION                               */
@@ -282,15 +258,16 @@ void setup()
   while(!Serial);
   Serial.println(F("Sketch version: " GIT_VERSION));
   setup_ble();
-  setup_as7262();
+  setup_opt3001();
 }
+
 
 
 void loop() 
 {
   extern Adafruit_BluefruitLE_SPI ble;
 
-  if (read_as7262_sensor()) {
+  if (read_opt3001_sensor()) {
      String line;
      format_message(line);
     if (ble.isConnected()) {

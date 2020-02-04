@@ -83,7 +83,11 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 /* ************************************************************************** */ 
 
 // A small helper
+#if 0
 static void error(const __FlashStringHelper* err) 
+#else
+static void error(const char* err)
+#endif
 {
   Serial.println(err);
   //delay(5000);
